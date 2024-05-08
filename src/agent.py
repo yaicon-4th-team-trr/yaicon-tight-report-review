@@ -78,7 +78,7 @@ class RetryAgentWorker(CustomSimpleAgentWorker):
         # dynamically create pydantic program for structured output extraction based on template
         chat_prompt_tmpl = get_chat_prompt_template(self.prompt_str, state["current_reasoning"])
         llm_program = LLMTextCompletionProgram.from_defaults(
-            output_parser=PydanticOutputParser(output_cls=ResponseEval),
+            # output_parser=PydanticOutputParser(output_cls=ResponseEval),
             prompt=chat_prompt_tmpl,
             llm=self.llm,
         )

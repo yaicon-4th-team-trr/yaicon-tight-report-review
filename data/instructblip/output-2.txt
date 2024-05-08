@@ -362,9 +362,7 @@ Convolutional Neural Networks](/168)  (1) | 2022.09.21
 **LaTex 표 관련 팁 (표 자동 생성기, 폰트 크기 조정, 셀 너비, 표 내부 여백, footnote 달기)** 2022.04.26
 22:14 ](/128)
 
-  * [
-
-**[matplotlib] matplotlib.pyplot을 이용한 이미지 시각화 총정리** 2022.08.29 15:58 ](/161)
+  * [ **[HuggingFace] Trainer 사용법** 2022.07.23 15:27 ](/154)
 
 ### 최근댓글
 
@@ -388,10 +386,10 @@ hmm
 
 ### 방문자수Total
 
-412,004
+413,313
 
-  * Today : 287
-  * Yesterday : 422
+  * Today : 729
+  * Yesterday : 867
 
 ### Calendar
 
