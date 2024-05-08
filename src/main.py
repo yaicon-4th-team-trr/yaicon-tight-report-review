@@ -1,18 +1,27 @@
 import torch
+import numpy as np
 from os import path as osp
+from enum import Enum
+from typing import List
 from argparse import ArgumentParser
 from transformers import AutoTokenizer
 from llama_index.llms.huggingface import HuggingFaceLLM
-from llama_index.core.llms import ChatMessage
-from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, StorageContext
+from llama_index.core import VectorStoreIndex, SimpleDirectoryReader, Settings, StorageContext, PromptTemplate, get_response_synthesizer
 from prompt_const import SYSTEM as SYSTEM_PROMPT
 from search_via_google import search
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from agent import RetryAgentWorker
-from llama_index.core.tools import QueryEngineTool
-
+from llama_index.core.retrievers import VectorIndexRetriever
+from llama_index.core.query_engine import RetrieverQueryEngine
+from llama_index.core.postprocessor import SimilarityPostprocessor
 
 HF_TOKEN = "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" # seil kang
+class SimilarityMode(str, Enum):
+    """Modes for similarity/distance."""
+
+    DEFAULT = "cosine"
+    DOT_PRODUCT = "dot_product"
+    EUCLIDEAN = "euclidean"
+
 
 def setup_args():
     parser = ArgumentParser() 
@@ -30,8 +39,44 @@ def load_external_documents(input_dir=None, input_keywords=None) -> dict:
     for key in input_keywords:
         search_result_docs = search(key) # editable
         external_docs[key] = SimpleDirectoryReader(input_dir=f"data/{key}").load_data()
-
+        for doc in external_docs[key]:
+            doc.metadata = {"source": "web",
+                            "name": "web search results",
+                            "description": "Web search results for the paper-reviews"
+                            }
     return external_docs
+
+def similarity(
+    embedding1: List[float],
+    embedding2: List[float],
+    mode: SimilarityMode = SimilarityMode.DEFAULT,
+) -> float:
+
+    """Get embedding similarity."""
+    if mode == SimilarityMode.EUCLIDEAN:
+        # Using -euclidean distance as similarity to achieve same ranking order
+        return -float(np.linalg.norm(np.array(embedding1) - np.array(embedding2)))
+    elif mode == SimilarityMode.DOT_PRODUCT:
+        return np.dot(embedding1, embedding2)
+    else:
+        product = np.dot(embedding1, embedding2)
+        norm = np.linalg.norm(embedding1) * np.linalg.norm(embedding2)
+        return product / norm
+
+
+def evaluate_similarity(embed_model, ex_docs_web, ex_docs_paper, int_docs_user_reports):
+
+    score = []
+    for doc_web in ex_docs_web:
+        user_report = "\n".join([user_report.text for user_report in int_docs_user_reports])
+        reference = doc_web.text
+
+        embed_user_report = embed_model.get_text_embedding(user_report)
+        embed_reference = embed_model.get_text_embedding(reference)
+
+        result = similarity(embed_user_report, embed_reference)
+        score.append(round(result, 3))
+    return np.mean(score)
 
 def main(args):
 
@@ -65,49 +110,80 @@ def main(args):
     )
 
     embed_model = HuggingFaceEmbedding(model_name=args.embed_model) # for llama-index
+    # embed_model = OllamaEmbedding(model_name=args.embed_model) # for llama-index
 
     Settings.embed_model = embed_model
     Settings.llm = llm
 
     # Load documents # TODO: more efficient way to load documents
-    external_documents = load_external_documents(osp.join("data"), args.keywords)  
-    internal_documents_paper = SimpleDirectoryReader(osp.join("papers")).load_data()
+    external_documents_web = load_external_documents(osp.join("data"), args.keywords)
+
+    external_documents_paper = {}
+    for key in args.keywords:
+        external_documents_paper[key] = SimpleDirectoryReader(osp.join("papers", key)).load_data()
+        for doc in external_documents_paper[key]:
+            doc.metadata = {"source": "paper",
+                            "name": "paper",
+                            "description": "papers of the paper-reviews"
+                            }
+
     internal_documents_user_reports = {}
     for key in args.keywords:
-        internal_documents_user_reports['key']=SimpleDirectoryReader(osp.join("reports", key)).load_data()
+        internal_documents_user_reports[key]=SimpleDirectoryReader(osp.join("reports", key)).load_data()
+        for doc in internal_documents_user_reports[key]:
+            doc.metadata = {"source": "user",
+                            "name": "user report",
+                            "description": "user reports of the paper-reviews"
+                            }
+    # for key in args.keywords:
+    #     evaluate_similarity(
+    #         embed_model=embed_model,
+    #         ex_docs_web=external_documents_web[key],
+    #         ex_docs_paper=external_documents_paper[key],
+    #         int_docs_user_reports=internal_documents_user_reports[key],
+    #     )
 
-    # Index documents
-    vector_tools = {}
+    # Index external documents
     callback_manager = llm.callback_manager
-    agents = {}
-    index_set = []
-    for i, (key, doc) in enumerate(zip(args.keywords, external_documents)):
-        external_documents_by_keyword = external_documents[key]
+    for i, key in enumerate(args.keywords):
+        total_documents = external_documents_web[key] + external_documents_paper[key] + internal_documents_user_reports[key]
         storage_context = StorageContext.from_defaults()
-        for i, doc_by_keyword in enumerate(external_documents_by_keyword):    
-            vector_index = VectorStoreIndex.from_documents([doc_by_keyword], storage_context=storage_context)
-            index_set.append(vector_index)
-            storage_context.persist(persist_dir=f"./storage/{key}/{i}")
 
-    for i, (key, doc) in enumerate(zip(args.keywords, external_documents)):
-        vector_query_engine = vector_index.as_query_engine()  # you can set similarity_top_k here
-        vector_tool = QueryEngineTool.from_defaults(query_engine=vector_query_engine)
-        vector_tools[key] = vector_tool
+        vector_indices = VectorStoreIndex.from_documents(total_documents, storage_context=storage_context)
+        storage_context.persist(persist_dir=f"./storage/{key}/paper")
 
-        # build custom agent
-        query_engine_tools = vector_tools
-        agent_worker = RetryAgentWorker.from_tools(
-            query_engine_tools[key],
-            llm=llm,
-            verbose=True,
-            callback_manager=callback_manager,
+        retriever = VectorIndexRetriever(
+            index=vector_indices,
+            similarity_top_k =5,
         )
 
-        agents[key] = agent_worker.as_agent(callback_manager=callback_manager)
+        response_synthesizer = get_response_synthesizer()
 
-        response = agents[key].chat("ViT는 무엇인가?")
-        print(str(response))
+        query_engine = RetrieverQueryEngine(
+            retriever=retriever,
+            response_synthesizer=response_synthesizer,
+            node_postprocessors=[SimilarityPostprocessor(similarity_cutoff=0.5)],
+        )
 
+        # ====== Customise prompt template ======
+        qa_prompt_tmpl_str = (
+            "Context information is below.\n"
+            "---------------------\n"
+            f"{SYSTEM_PROMPT}\n"
+            "---------------------\n"
+            "Query: {query_str}\n"
+            "Answer: "
+        )
+        qa_prompt_tmpl = PromptTemplate(qa_prompt_tmpl_str)
+
+        query_engine.update_prompts({"response_synthesizer:text_qa_template": qa_prompt_tmpl})
+
+        # Generate the response
+        response = query_engine.query(
+            "Explain how similar the user report is to the original content of the paper, and compare it with the results of a web search.",
+        )
+
+        print(response)
 
 if __name__ == "__main__":
     args = setup_args()

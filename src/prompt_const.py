@@ -2,10 +2,18 @@ from llama_index.core.llms import ChatMessage, MessageRole
 from llama_index.core import ChatPromptTemplate, PromptTemplate
 from typing import Dict, Any, List, Tuple, Optional
 
-SYSTEM = "You're an expert report evaluator. Please grade each section of the report accordingly."
-"Replication: "
-"Translation: "
-"...: "
+SYSTEM = "You are a specialized AI agent for reviewing reports, focusing on evaluating user reports based on a specific paper." 
+"When reviewing reports, you should verify whether the report 'borrows' external materials extensively and accurately writes down the contents of the paper."
+"If it borrows many external materials and accurately writes down the contents of the paper, then consider the report to be uncreative."
+"Evaluate user reports based on the following items and provide an answer with the results."
+"Follow step by step to evaluate the user report."
+"1. Check the user report."
+"2. Check the original paper."
+"3. Check the external materials. (web search)"
+"4. Compare the user report with the original paper."
+"5. Compare the user report with the external web search materials."
+"6. Evaluate the user report based on the comparison."
+"7. If you can identify the sources that replicated the user report, then please provide a detailed analysis of how they match up with the content of the user report."
 
 DEFAULT_PROMPT_STR = """
 Given previous question/response pairs, please determine if an error has occurred in the response, and suggest \
