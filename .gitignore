@@ -1,6 +1,7 @@
 .gitkeep
 .vscode
 ./storage/
+.idea
 notion/.env
 notion/app.log
 notion/reports/*.txt

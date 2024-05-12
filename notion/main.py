@@ -15,11 +15,12 @@ from tqdm import tqdm
 
 # 로그 파일 설정
 logging.basicConfig(
-    filename='app.log',   # 로그 파일명
-    filemode='w',         # 파일 모드 ('a'는 추가, 'w'는 쓰기)
+    filename='app.log',  # 로그 파일명
+    filemode='w',  # 파일 모드 ('a'는 추가, 'w'는 쓰기)
     level=logging.ERROR,  # 로깅 레벨
     format='%(asctime)s - %(levelname)s - %(message)s'  # 로그 메시지 포맷
 )
+
 
 def save_content_to_file(page_content, filename="page_content.txt"):
     """페이지 내용을 텍스트 파일로 저장하는 함수"""
@@ -97,9 +98,6 @@ def text_from_block(notion, block):
 
     return ret
 
-def page_ids_from_pages(pages):
-    return [page['id'] for page in pages]
-
 
 if __name__ == "__main__":
     config = dotenv_values(".env")
@@ -113,11 +111,15 @@ if __name__ == "__main__":
     DB_id = "d6b1595a-d5e6-41c7-b48a-353730fea35d"
     try:
         pages = pages_from_database(notion_agent, DB_id)
-        ids = page_ids_from_pages(pages)    # page ids
+        ids = [page['id'] for page in pages]  # page
+        titles = [page['properties']['Name']['title'][0]['plain_text'] for page in pages]  # page ids
+        idts = combined_list = [list(pair) for pair in zip(ids, titles)]
 
-        for i in tqdm(ids, desc="Processing"):
+        for idt in tqdm(idts, desc="Processing"):
+            i = idt[0]
+            t = idt[1]
             content = content_from_page(notion_agent, i)
-            save_content_to_file(content, filename=os.path.join(folder_path, f'{i}.txt'))
+            save_content_to_file(content, filename=os.path.join(folder_path, f'{t}.txt'))
 
     except Exception as e:
         raise e
