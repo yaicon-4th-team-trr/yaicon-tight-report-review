@@ -1,0 +1,149 @@
+[ 파이토치 한국 사용자 모임 ](/)
+
+#  [Mamba: 선택적 상태 공간을 활용한 선형 시간 시퀀스 모델링 (Linear-Time Sequence Modeling with
+Selective State Spaces)](/t/mamba-linear-time-sequence-modeling-with-
+selective-state-spaces/3043)
+
+[ 읽을거리&정보공유 ](/c/news/14)
+
+[rnn](https://discuss.pytorch.kr/tag/rnn), [selective-state-space-
+models](https://discuss.pytorch.kr/tag/selective-state-space-models),
+[cnn](https://discuss.pytorch.kr/tag/cnn), [long-
+sequence](https://discuss.pytorch.kr/tag/long-sequence), [sequence-
+model](https://discuss.pytorch.kr/tag/sequence-model),
+[mamba](https://discuss.pytorch.kr/tag/mamba),
+[paper](https://discuss.pytorch.kr/tag/paper)
+
+[9bow](https://discuss.pytorch.kr/u/9bow) (박정환)  12월 14, 2023, 8:20오전  1
+
+  * _이 글은 GPT 모델로 자동 요약한 설명으로, 잘못된 내용이 있을 수 있으니 원문을 참고해주세요!![:smile:](https://discuss.pytorch.kr/images/emoji/apple/smile.png?v=12)_
+  * _읽으시면서 어색하거나 잘못된 내용을 발견하시면 덧글로 알려주시기를 부탁드립니다!![:bowing_man:](https://discuss.pytorch.kr/images/emoji/apple/bowing_man.png?v=12)_
+
+* * *
+
+# Mamba: 선택적 상태 공간을 활용한 선형 시간 시퀀스 모델링 (Linear-Time Sequence Modeling with
+Selective State Spaces)
+
+![Mamba: 선택적 상태 공간을 활용한 선형 시간 시퀀스 모델링 \(Linear-Time Sequence Modeling with
+Selective State
+Spaces\)](https://discuss.pytorch.kr/uploads/default/original/2X/0/0e44b2dc7743afd7b3e780d4b358bb81df76d8f1.jpeg)
+
+## 개요
+
+Mamba(맘바)는 언어 모델링과 같이 정보 밀도가 높은 데이터에 대해 뛰어난 성능을 보이는 새로운 상태 공간 모델 아키텍처입니다. 이는
+구조화된 상태 공간 모델을 바탕으로 하며, 효율적인 하드웨어 인식 설계와 구현을 특징으로 합니다
+
+Mamba는 긴 데이터 시퀀스를 효율적으로 모델링하는 새로운 신경망 모델을 제안합니다. 이 모델은 기존 시퀀스 모델, 특히
+트랜스포머(Transformer)의 한계를 극복하기 위해 설계된 새로운 선택적 상태 공간 모델(Selective State Space
+Models, SSMs)입니다. 이 모델은 순환 신경망(Recurrent Neural Networks, RNNs)과 합성곱
+신경망(Convolutional Neural Networks, CNNs)의 조합으로, 고전적인 상태 공간 모델에서 영감을 받았습니다​​​​.
+
+## Mamba(맘바) 모델 소개
+
+[![맘바 모델 구조 / Mamba Model
+Architecture](https://discuss.pytorch.kr/uploads/default/optimized/2X/e/ea19838cee47d85c37798231a9d25cac81589833_2_1028x513.png)맘바
+모델 구조 / Mamba Model Architecture1413×706 91.4
+KB](https://discuss.pytorch.kr/uploads/default/original/2X/e/ea19838cee47d85c37798231a9d25cac81589833.png
+"맘바 모델 구조 / Mamba Model Architecture")
+
+Mamba(맘바)는 선택적 집중을 통해 입력에 따라 특정 정보에 집중하거나 무시할 수 있습니다. 이는 입력에 기반하여
+SSM(Selective State Space Model) 가중치를 매개변수화함으로써, 모델이 관련 없는 정보를 걸러내고 관련 있는 데이터를
+무기한 유지할 수 있게 합니다​​.
+
+또한, Mamba는 하드웨어 인식 알고리즘(Hardware-aware Algorithm)을 사용하여 모델을 합성곱 대신 재귀적으로
+계산합니다. 이 접근 방식은 확장된 상태를 실체화하지 않고, GPU 메모리 계층 간의 I/O 접근을 방지할 수 있어 기존 방법보다 빠르고
+효율적입니다​​.
+
+### **긴 시퀀스 처리 능력**
+
+기존의 트랜스포머 모델은 시퀀스 길이가 증가함에 따라 계산 복잡도가 제곱으로 증가하는 문제가 있습니다. 이는 긴 시퀀스를 처리할 때
+비효율적이고, 자원을 많이 소모합니다. 맘바는 이러한 문제를 해결하며, 시퀀스 길이에 대해 선형적으로 스케일링합니다. 따라서 맘바는 긴
+시퀀스를 효율적으로 처리할 수 있으며, 특히 언어, 오디오, 유전체학과 같은 분야에서 중요한 응용 가능성을 가집니다​​​​.
+
+### **계산 효율성 및 속도**
+
+맘바는 트랜스포머보다 빠른 추론 속도와 더 적은 메모리 요구량을 가집니다. 이는 맘바가 실제 응용에서 더 효율적이고, 대규모 모델을 학습하고
+추론하는 데 필요한 컴퓨팅 자원을 절약할 수 있음을 의미합니다​​.
+
+## 주요 특징
+
+![Mamba Selective
+Copying](https://discuss.pytorch.kr/uploads/default/original/2X/1/1c88f99e36ee8edbcfd920a50738a8c148ffed32.png)
+
+### **선택적 상태 공간(Selective State Spaces)**
+
+맘바는 입력에 기반하여 SSM 매개변수를 매개변수화합니다. 이를 통해 모델은 관련 없는 정보를 걸러내고, 필요한 정보를 무기한 유지할 수
+있습니다. 이 선택 메커니즘은 맘바가 관련 있는 데이터에만 집중할 수 있게 하여, 데이터 처리 효율성을 높입니다​​.
+
+### **하드웨어 인식 알고리즘(Hardware-aware Algorithm)**
+
+맘바는 합성곱 대신 재귀적으로 계산하는 하드웨어 인식 알고리즘을 사용합니다. 이는 GPU 메모리 계층 간의 IO 접근을 방지하고, 확장된
+상태를 실체화하지 않습니다. 결과적으로, 이 구현은 이론적으로(시퀀스 길이에 따라 선형적으로 스케일링) 및 현대 하드웨어에서(예: A100
+GPU에서 최대 3배 빠름) 이전 방법보다 빠릅니다​​.
+
+### **단순화된 아키텍처**
+
+맘바는 이전 SSM 아키텍처와 트랜스포머의 MLP 블록을 단일 블록으로 결합하여, 더 단순하고 효율적인 아키텍처를 제공합니다. 이는 맘바를
+더 쉽게 구현하고 확장할 수 있게 해주며, 다양한 응용 분야에 적용하기에 적합합니다​​.
+
+## SSM의 기본 개념
+
+SSM은 시퀀스 데이터(예: 시간에 따라 변화하는 데이터)를 모델링하기 위해 설계된 모델입니다. 이 모델들은 전통적인 순환 신경망(RNN)과
+합성곱 신경망(CNN)의 특징을 결합하면서, 고전적인 상태 공간 모델에서 영감을 받아 개발되었습니다.
+
+SSM은 긴 시퀀스 처리가 가능하며 다양한 형태의 시퀀스 데이터에 적용할 수 있습니다. 이러한 특징으로 다양한 아키텍처와 결합하여 새로운
+형태의 시퀀스 모델링 작업에 적용할 수 있습니다.
+
+## 더 읽어보기
+
+### Mamba 논문
+
+[arxiv.org](https://arxiv.org/pdf/2312.00752.pdf)
+[](https://arxiv.org/pdf/2312.00752.pdf)
+
+### [2312.00752.pdf](https://arxiv.org/pdf/2312.00752.pdf)
+
+1263.54 KB
+
+### GitHub 저장소
+
+![](https://github.githubassets.com/favicons/favicon.svg)
+[GitHub](https://github.com/state-spaces/mamba)
+
+![](https://discuss.pytorch.kr/uploads/default/original/2X/0/06b9b3d23f9f5ee0f225a00fa7b3bb6357fc7f64.png)
+
+### [GitHub - state-spaces/mamba](https://github.com/state-spaces/mamba)
+
+Contribute to state-spaces/mamba development by creating an account on GitHub.
+
+### 학습된 모델 가중치 다운로드 at
+![:hugs:](https://discuss.pytorch.kr/images/emoji/apple/hugs.png?v=12)HuggingFace
+
+[huggingface.co](https://huggingface.co/state-spaces)
+
+![](https://discuss.pytorch.kr/uploads/default/original/2X/4/48be4a21f31983ef1644ee17c8a6e5222ea0ad9a.png)
+
+### [state-spaces (State Space Models)](https://huggingface.co/state-spaces)
+
+Org profile for State Space Models on Hugging Face, the AI community building
+the future.
+
+1개의 좋아요
+
+[Vision Mamba(Vim): 양방향 상태 공간 모델(SSM)을 활용한 효율적 시각 표현
+학습](https://discuss.pytorch.kr/t/vision-mamba-vim-ssm/3423)
+
+[[GN⁺] Mamba: 트랜스포머에 도전하는 상태-공간 모델(SSM)](https://discuss.pytorch.kr/t/gn-
+mamba-ssm/3640)
+
+[[GN] 2023년은 오픈 LLM의 해](https://discuss.pytorch.kr/t/gn-2023-llm/3087)
+
+  * [홈 ](/)
+  * [카테고리 ](/categories)
+  * [FAQ/가이드라인 ](/guidelines)
+  * [이용약관 ](/tos)
+  * [개인정보 취급방침 ](/privacy)
+
+[Discourse](https://www.discourse.org)를 사용합니다. JavaScript가 활성화된 상태에서 가장 잘
+보입니다.
+

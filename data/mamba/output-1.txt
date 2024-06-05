@@ -1,0 +1,238 @@
+[ ![모두의연구소](https://modulabs.co.kr/wp-content/uploads/2022/11/logo-
+signature-4x.png) ](https://modulabs.co.kr/)
+
+  * [스토리](https://modulabs.co.kr/ceo_message/)
+  * [오름클래스](https://orm.im/)
+  * [랩](https://modulabs.co.kr/apply_lab/)
+  * [풀잎스쿨](https://modulabs.co.kr/apply-flip/)
+  * [페이퍼샵](https://modulabs.co.kr/papershop/)
+  * [블로그](/blog/)
+  * [문의하기](https://modulabs.co.kr/contact_us/)
+  * [로그인](https://modulabs.co.kr/login/)
+  * [슬랙 입장하기](https://join.slack.com/t/modulabs/shared_invite/zt-2h89rp904-EH9BNYchSqRzBR7MvG0Lqg)
+
+[ ](https://modulabs.co.kr/cart/)
+
+페이지 선택
+
+부트캠프와 다른 AI학교,  
+AI는 아이펠에서 배우세요
+
+[ 지금 무료 지원하기
+](https://www.aiffel.io?utm_source=modulabs&utm_medium=on_banner_all&utm_campaign=kdt_23_03&utm_content=m_tf_codingedu_introducing-
+mamba)
+
+#인공지능
+
+# Mamba : 트랜스포머를 대체할 차세대 아키텍처의 등장
+
+트랜스포머의 대항마라 볼 수 있는 Mamba 모델이 나왔습니다. Mamba는 State Space Model을 기반으로 만들어진 아키텍쳐라
+볼 수 있습니다. 비록 아직은 미흡하긴 하지만 추후에 발전의 여지가 충분히 있다고 생각합니다.
+
+2024-03-23 | 이영빈
+
+![](https://modulabs.co.kr/wp-content/uploads/2024/03/mamba-
+transformer-e1711105598320.png)
+
+## 트랜스포머의 대안?
+
+현재는 딥러닝 아키텍쳐는 사실상 [트랜스포머의 전성시대](https://modulabs.co.kr/blog/google-research-
+intro/)라고 볼 수 있습니다. 현재 AI의 트렌드를 이끌고 있는 LLM도 트랜스포머 아키텍쳐로 이루어져 있으며 그림을 생성하는
+디퓨전모델 또한 트랜스포머를 차용하고 있습니다.  
+뿐만 아니라 시계열, 추천시스템과 같은 다양한 분야에서 트랜스포머 아키텍쳐를 사용하고 있는 상황입니다.  
+이런 상황에서도 많은 연구자들이 현재 트랜스포머를 대체하기 위한 시도를 진행하고 있습니다.  
+그중에서 대표적이고 유력한 방식으로 떠오르고 있는 아키텍쳐는 State Space Model이며 특히 주목받기 시작한 것은 Mamba :
+Linear-Time Sequence Modeling with Selective State Spaces 논문과 모델이 공개된 것이라 봅니다.
+
+Mamba는 논문과 모델이 나왔을때보다 [ICLR 2024에 최종적으로 논문 게재가 되지 않았다는
+점](https://openreview.net/forum?id=AL1fq05o7H)에서 더 큰 이슈가 되었습니다.  
+때마침 NeurIPS에서 10년전에 NeurIPS에 게재승인된 논문중에서 가장 영향력이 있는 논문상으로 Word2Vec가 뽑혔습니다.  
+Word2Vec 논문이 공교롭게도 ICLR 2013에서 네번의 강력거절을 당한 이력이 있다보니 Mamba가 연상작용을 했다고도 생각합니다.  
+그렇다면 사람들이 왜 Mamba에 대해 열광하는지 그리고 이 아키텍쳐의 특징을 하나씩 살펴보도록 하겠습니다.
+
+## Mamba 아키텍쳐를 분석해보자!
+
+Mamba의 아키텍쳐를 이해하기 위해서는 우선 State Space Model이 어떻게 딥러닝에서 사용되는지를 파악하고 Mamba에서의
+SSM은 다른 SSM과 어떻게 다른지 설명할 예정입니다.  
+이후에 Mamba 만이 갖고 있는 Selective 메커니즘과 Selective Scan에 대해 이야기할 에정이며 마지막으로 전체
+Mamba의 아키텍쳐에 대해 설명할 에정입니다.
+
+### Mamba의 뼈대 : State Space Models
+
+    ![$$ h\\prime\(x\) = Ah\(t\) + Bx\(t\), y\(t\) = Ch\(t\) $$](https://modulabs.co.kr/wp-content/ql-cache/quicklatex.com-0fbe432483e61bc480c8855886547437_l3.png)
+
+
+
+Mamba의 뼈대를 이루고 있는 아키텍쳐는 State Space Model이라 볼 수 있습니다.  
+State Space Model (SSM)은 흔히 제어이론에서 사용되고 있는 상태공간방정식과 동일하게 사용됩니다.  
+다만 제어이론에서의 상태공간방정식의 경우에는 연속형 변수를 가정해서 사용하는 방정식인데 딥러닝의 경우 변수가 전부 이산형 변수이기에 이산화를
+거쳐야 합니다.  
+이때 이산화를 거치는 방식은 크게 3가지로 오일러 방식, ZOH 방식, 이중선형방식이 있습니다. 각자 방식은 장단점을 갖고 있지만
+Mamba의 경우 ZOH 방식을 채택합니다.
+
+    ![$$ h_t = \\bar{A}h_{t-1}+\\bar{B}x_t, y_t = Ch\(t\), \\bar{A} = \\exp\(\\Delta{A}\), \\bar{B} = \(\\Delta{A}\)^{-1}\(\\exp\(\\Delta{A}\)-I\)\\cdot\\Delta{B} $$](https://modulabs.co.kr/wp-content/ql-cache/quicklatex.com-fdcbbe5bd360232e745acbe9cee09a66_l3.png)
+
+
+
+이산화시킨 모델을 보게 된다면 t가 커지면 커질수록 B 와 C는 고정된 상태에서 A 만 계속해서 곱해지는 경향이 발생합니다.  
+그렇기에 이를 커널 K로 정의해서 사용할 수 있습니다. 이를 기반으로 컨벌루션 형식으로 작성하게 되면 아래 식처럼 나타낼 수 있습니다.
+
+    ![$$ \\bar{K} = \(C\\bar{B}, C\\bar{A}\\bar{B}, \\cdots ,C\\bar{A^k}\\bar{B},\\cdots\), y = x \\ast\\bar{K} $$](https://modulabs.co.kr/wp-content/ql-cache/quicklatex.com-c8a3009e6cc9f055f90aa3f096ce8b60_l3.png)
+
+
+
+첫번째 방식은 하나씩 재귀로 들어가면서 반복되기 때문에 RNN과 같이 비효율적인 방법으로 반복되지만  
+2번째 방식의 경우에는 재귀 대신 컨벌루션 형식으로 계산하기 때문에 반복이 없을 뿐만 아니라 효율적인 병렬학습도 가능합니다.  
+그래서 컨벌루션 형식으로 바꾸는 형식을 두고 보통 선형 시불변(Linear Time invariance)이라고도 부릅니다.  
+다만 컨벌루션의 방식의 경우 시퀀스 추론을 진행할 때 한꺼번에 결과값이 나오기 때문에 이 경우에는 첫번째 방식을 사용합니다.
+
+### Mamba의 특징 1 : Selective Mechanism
+
+![Mamba Selective Copying과 Inductive Heads](https://modulabs.co.kr/wp-
+content/uploads/2024/03/Screenshot-from-2024-03-22-16-57-45.png)
+
+Mamba의 가장 대표적인 특징은 Selective Mechanism이 있습니다.  
+저자들은 기존 SSM은 과도하게 모든 토큰들과 계산하는 방식을 취하고 있었기 때문에 비효율적이라고 보았습니다.  
+그래서 Mamba 아키텍쳐의 경우 Δ 값으로 제어할 수 있는 반경을 좁히는 방식을 채택했습니다.  
+이 방식을 택한 이유는 Large Sequence Modeling의 능력을 평가하는 task로 Selective Copying 테스크와
+Induction Heads 테스크가 있기 때문입니다.  
+Selective Copying 테스크는 암기할 토큰 위치를 선택적으로 복제해서 맞추는 테스크로 토큰을 암기하고 관련없는 토큰을 걸러내는
+콘텐츠 인식 추론이 필요합니다.  
+Induction Heads 테스크는 LLM의 맥락 내 학습 능력의 대부분을 설명하기 위해 가설화된 테스크이며 문맥 인식 추론능력이
+필수적입니다. Selective mechanism을 활용하면 위에 있는 테스크의 성능향상을 기대할 수 있습니다.
+
+![S4와 Mamba S6비교](https://modulabs.co.kr/wp-
+content/uploads/2024/03/Screenshot-from-2024-03-22-17-18-24.png)
+
+이 기법을 수행하기 위해서 Mamba는 아키텍쳐는 S6 방법론을 채택합니다.  
+기존에 있던 S4와 S6의 차이점은 기존에는 파라미터로써 존재했던 B, C를 x에 대한 output feature가 N인 선형 함수로
+치환합니다.  
+Δ의 경우 파라미터에 x에 대한 output feature 1인 선형함수를 거치고 D에 따라 브로드캐스팅된 함수를 기존 파라미터에 더하고
+softplus함수에 넣는 방식으로 바꿉니다.  
+이렇게 바꾸게 되면 A,B 모두 모두 이산화를 진행했을 때 차원수도 늘어나게 됩니다. 이걸 기반으로 SSM에 넣게 되면 Selective
+Copying을 사용할 수 있습니다.
+
+그러나 Selective 메커니즘은 장점만 있는 것이 아닙니다.  
+Selective 메커니즘을 사용하면 Δ 값에 의해 선택이 부여되며 시간시불변성이 성립하지 않게 되고 시간에 맞춰서 학습을 진행해야 합니다.  
+그렇기에 이전에 SSM의 강점이었던 빠른 병렬학습인 컨벌루션 방식을 사용하지 못하기 때문에 이 부분에서 문제가 발생할 여지가 있습니다.
+
+저자들은 시퀀스 모델을 만들때 효과성과 효율성에 대한 트레이드오프를 언급하면서 Selective Copying 기술의 장점을 변호합니다.  
+시퀀스 모델을 작게 만들면 만들수록 작은 상태를 유지하기에 속도가 빠르지만 시퀀스 모델을 크게 만들면 성능이 향상됩니다.  
+이때 저자는 효율성있게 모델을 작게 만들고 효과를 유지하는 방식이 Selective Copying기술이며 Mamba와 같은 모델에서 유용하게
+사용할 수 있음을 이야기합니다.
+
+### Mamba의 특징 2 : Selection 메커니즘의 특성을 알아보자!
+
+이전에 봤던 Selection 메커니즘을 자세히 살펴보면 RNN에서 많이 사용하는 Gating Mechanism과 유사하다는 걸 알 수
+있습니다.  
+우선 Δ를 입력에 의존적으로 바꿔 RNN에서의 gate의 역할을 수행하는 유사한 효과를 얻을 수 있습니다.  
+다만 RNN에서의 Gating과 달리 Selection 메커니즘은 시퀀스를 따라 정보의 흐름을 선택적으로 조절하는 것에 차이가 있습니다.
+
+그리고 SSM에서의 각 파라미터들에 대한 해석을 추가하면 Δ는 현재 입력 데이터에 얼마나 신경을 쓸지 아님 무시할지 결정합니다.  
+만약 Δ가 커지면 상태 h를 초기화하고 입력값에 집중하는 반면 만일 Δ가 작다면 상태를 유지하고 현재 입력을 무시합니다.  
+A 파라미터의 경우 selective 메커니즘을 사용할 수 있지만 A의 경우 ZOH기법에 의해 Δ의 상호작용에만 영향을 미칩니다.  
+다만 A 파라미터도 Selection 메커니즘을 사용할 수 있게 바꾼다면 성능이 향상되지만 그만큼 계산이 늘어나게 됩니다.  
+B,C 파라미터 마저도 선택적으로 수정한다면 입력을 상태에 보낼지 혹은 상태 출력에 보낼지 결정할 수 있게 됩니다.
+
+### Mamba의 특징 3 : Hardware-aware Parallel Scan Algorithm
+
+![mamba ssm](https://modulabs.co.kr/wp-content/uploads/2024/03/Screenshot-
+from-2024-03-22-17-51-14.png)
+
+Selection Copying을 사용하게 되면서 SSM의 파라미터들이 이제 input에 의존하기 시작하게 되었고 결국 컨벌루션 형태로
+계산하는 것이 불가능해졌습니다.  
+그렇다고 Recurrent 모드로 학습을 진행하게 되면 중간 Hidden State 크기가 매우 커질 수도 있습니다.  
+저자들은 단점을 해결하기 위해서 선택한 Hardware-aware Parallel Scan Algorithm을 채택했습니다.
+
+Hardware-aware Parallel Scan Algorithm은 Hidden State를 메모리에 저장하지 않고 병렬적으로 scan
+연산을 수행하는 방식입니다.  
+이 방식을 사용하기 위해서 저자들은 kernel fusion 기법을 활용하게 됩니다.  
+kernel fusion은 입력과 파라미터를 GPU HBM에서 읽어오고 SRAM에 로드합니다.  
+SRAM에서 이산화, recurrnet 연산, 곱셈과 같은 계산을 진행하고 최종 출력만 HBM에 덧쓰는 방식으로 진행합니다. 이 방식을
+채택하게 되면 사용량을 입출력 크기 수준으로 절감합니다.
+
+역전파를 진행할 때도 hidden state를 저장하지 않기 때문에 hidden state를 다시 계산해야 합니다.  
+이 방식을 recomputataion이라고 부릅니다. Recomputation은 다시 계산하는 것이기에 hidden state를 저장하는
+메모리 사용량은 줄어들지만 계산량이 증가합니다.  
+그럼에도 activation 저장에 필요한 메모리 사용량은 트랜스포머로 유지되기 때문에 사용하는 것이 좋습니다.
+
+### 특징들을 전부 종합한 Mamba의 아키텍쳐 보기!
+
+![mamba 아키텍쳐](https://modulabs.co.kr/wp-content/uploads/2024/03/Screenshot-
+from-2024-03-22-17-51-38.png)
+
+이전까지 Mamba에 들어가는 SSM에 대해 분석했다면 이제 Mamba의 아키텍쳐를 분석하겠습니다.  
+Mamba의 경우 H3 요소와 트랜스포머에서 자주 사용하는 Gated MLP를 섞은 형식으로 완성됩니다.  
+이때 σ는 Swish 활성화함수를 사용합니다. 기존에 사용하던 H3가 연속적인 신호에서 성능이 괜찮았지만 언어모델과 같은 이산형
+시퀀스모델에서는 성능이 좋지 않았습니다.  
+반면 이번에 소개한 Mamba 아키텍쳐는 더 넓은 범위의 데이터들을 처리할 수 있고 특히 거대 데이터를 활용한 시퀀스 모델링에 탁월하다고
+합니다.
+
+### 실제 성능 비교하기
+
+![selective copying & inductive heads](https://modulabs.co.kr/wp-
+content/uploads/2024/03/Screenshot-from-2024-03-22-18-55-53.png)
+
+실제 성능을 비교하면 Selective Mechanism을 도입한 SSM과 그렇지 않은 SSM을 비교하면 S6(S4 + Selection)를
+도입한 방식이 기존 S4보다 훨씬 더 좋은 성능을 보이고 있습니다.  
+즉 SSM내부에서 Selective Mechanism이 훨씬 성능이 좋다는걸 알 수 있습니다.  
+Induction Heads의 경우에도 기존에 멀티헤드 어텐션을 사용한 모델들보다도 Mamba가 훨씬 잘 유지하는 것을 성능으로 잘
+보여주었습니다.
+
+![mamba 성능](https://modulabs.co.kr/wp-content/uploads/2024/03/Screenshot-
+from-2024-03-22-19-15-43.png)
+
+성능평가 지표도 살펴보면 상당히 의미 있는 지표가 나왔습니다.  
+Mamba의 경우 RNN계열 혹은 GPT-2 계열 모델들과 비교했을 때 성능이 훨씬 좋은 모습이 나타납니다.  
+비록 현재 사용하고 있는 LLM들이 훨씬 크고 성능 또한 보장되어 있다보니 지표 자체가 낮다고 생각할 수 있지만..  
+트랜스포머를 사용하지 않은 모델이 이정도 성과를 가져갔다는 것은 괄목할만한 성과라고 보여집니다.
+
+## 앞으로의 전망
+
+현재 코넬대학교 조교수이자 Hugging Face Researcher인 Alexander Rush가 SSM관련 강의를 시작할 때
+"트랜스포머는 대체될수 있나요?" 라는 질문을 던집니다. Rush는 다음과 같이 대답합니다. "현재는 맞지만… 10년 뒤에는 글쎄…?"  
+필자도 Rush의 의견에 동의합니다.현재 트랜스포머는 압도적인 성능을 보여주고 있는 동시에 데이터를 입력으로 받고 학습하는 능력에서만큼은
+아직까지 이길 수 있는 아키텍쳐가 없다고 생각합니다.  
+AI반도체를 만드는 회사들도 트랜스포머 아키텍쳐를 효율적으로 연산하기 위해서 노력하고 있습니다.그러나 10년 뒤에는 어떻게 변할지 모릅니다.  
+여러 후보들이 나올 것이며 Mamba의 SSM도 충분히 가능성이 있다고 생각합니다. 그러기에 Mamba 논문과 코드를 보면서 이해하는걸
+추천합니다!
+
+![](/wp-content/uploads/modulabs-mypage/profile-
+image/2023_03_08_02_42_20_3460.png)
+
+이영빈 모두의연구소
+
+🖥️ 모두의연구소 아이펠 퍼실리테이터  
+🏛️ JAX-KR 오거나이저  
+😎 GDG SongDo 오거나이저
+
+[목록으로 돌아가기](/blog) 공유하기
+
+(주)모두의연구소 | 대표 김승일 | 사업자등록번호 517-88-00184 | [개인정보보호정책](/privacy_policy/) |
+[FAQ](/faqfaq/) | [1:1 문의](/contact_us/) |
+[채용](https://modulabs.career.greetinghr.com/) | [오시는
+길](/where_is_the_modulabs/)
+
+서울 강남구 강남대로 324 (역삼디오슈페리움) 2층: 모두의연구소 강남캠퍼스  
+서울 강남구 역삼로 156 태광빌딩 2층: 모두의연구소 역삼캠퍼스  
+대전 중구 중앙로 119 대전테크노파크 디스테이션 12층 : 모두의연구소 대전캠퍼스
+
+대표전화 070-7743-5882
+
+[![](https://modulabs.co.kr/wp-
+content/uploads/2021/03/sns_facebook.png)](https://www.facebook.com/lab4all/)
+
+[![](https://modulabs.co.kr/wp-
+content/uploads/2021/09/instagram.png)](https://www.instagram.com/modulabs_/)
+
+[![](https://modulabs.co.kr/wp-
+content/uploads/2021/03/sns_youtube.png)](https://www.youtube.com/channel/UCv4U1uZvuxopMj8xiPXIBMQ)
+
+[![](https://modulabs.co.kr/wp-
+content/uploads/2024/04/icon_naverblog-1.png)](https://blog.naver.com/modulabs_official)
+
+[![](https://modulabs.co.kr/wp-
+content/uploads/2022/04/medium-1.png)](https://medium.com/modulabs)
+
+[ __](javascript:void\(0\);)
+

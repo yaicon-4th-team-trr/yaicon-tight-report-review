@@ -1,0 +1,175 @@
+![](https://www.facebook.com/tr?id=579484675976917&ev=PageView&noscript=1)
+
+[](/home)
+
+[커리어리 트렌드
+
+](/trends)[현직자 Q&A](/qnas)
+
+[사이드 프로젝트
+
+](/lounge)
+
+로그인
+
+회원가입
+
+[![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![소성은님의
+프로필 사진](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+소성은
+
+Solutions Architect @ AWS
+
+](/profiles/16843)
+
+팔로우
+
+# Salesforce의 InstructBLIP
+
+얼마 전에 Salesforce 에서 BLIP2를 공개했었습니다. 높은 성능을 보이는 Vision-Language LLM 이었고, 테스트를 해
+봤을 때 꽤 흥미로운 결과 (예를 들어 이미지 내의 사람이나 객체 갯수를 잘 카운팅하는 등) 를 보여주기도 해서 발전 속도가 놀랍다고 생각을
+했었습니다. 이번에 Salesforce에서 그 후속으로 InstrcutBLIP을 공개하였습니다. \- 코드:
+https://github.com/salesforce/LAVIS/tree/main/projects/instructblip 기존의 BLIP2
+기반으로 여러 가지 public dataset 을 가져다가 instruct tuning이 가능한 형태로 만들어서 fine-tuning을
+진행한 것이고, 매우 큰 Vision-Language 데이터셋인 Flamingo를 포함한 여러 데이터에 대해서 zero-shot 에서
+SOTA를 달성하였다고 합니다. 논문을 살펴보면 구조 자체는 기존 BLIP2 와 다를 것이 별로 없습니다. BLIP의 핵심인 Q-former
+부분에 기존에는 Query + Text 형태로 넣던 것에서 text를 instruction 으로 한 정도만 차이라고 볼 수 있습니다.
+(Instruct-tuning 이므로 당연한 것입니다만...ㅎㅎ) 이번 연구는 모델 아키텍쳐 등이 개선되었다기 보다는, 여러 데이터셋에
+대해서 fine-tuning을 진행하고 이 모델을 공개한 것에 의의가 있다고 볼 수 있습니다. 여기서는 Vicuna와 FlanT5기반으로 된
+모델을 공개하였는데 MiniGPT4 (https://github.com/Vision-CAIR/MiniGPT-4) 와 비슷하네요. 어찌되었건
+최근에 Vision/Language를 같이 다루는 LLM들이 많아지고 있고 점점 더 여러 modality 로 확장되어 가는 것 같습니다.
+그와는 별개로 Meta의 OPT, LLaMA나 Google의 FlanT5 등은 오픈소스 쪽에 정말 큰 기여를 하고 있는 것 같습니다.
+
+[LAVIS/projects/instructblip at main · salesforce/LAVIS
+
+GitHub
+
+![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%27160%27%20height=%27120%27/%3e)![LAVIS/projects/instructblip
+at main ·
+salesforce/LAVIS](data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7)![LAVIS/projects/instructblip
+at main ·
+salesforce/LAVIS](/_next/image?url=https%3A%2F%2Fpubly.imgix.net%2Farticle-
+thumbnails%2F2023.05%2F61115babdeb468d80642377c4d3e698ddf46eed0f9fc19c9e9d40415fa084290.webp%3Fw%3D200%26h%3D200&w=384&q=75)](https://github.com/salesforce/LAVIS/tree/main/projects/instructblip)
+
+다음 내용이 궁금하다면?
+
+![kakao_icon](/_next/static/images/img_symbol-
+kakao-b1fe6197135e5beead71b1a90f8e2b7d.png)카카오로 3초만에 가입하기
+
+또는
+
+이메일로 가입하기
+
+이미 회원이신가요?
+
+로그인하기
+
+2023년 5월 14일 오후 3:31
+
+좋아요 **2**
+
+•
+
+리포스트 **1**
+
+[ 저장 **2** • 조회 **2,804**
+
+](/comments/83593)
+
+좋아요
+
+리포스트
+
+### 댓글 0
+
+![](/_next/static/images/img_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png)
+
+* * *
+
+* * *
+
+* * *
+
+### 비슷한 게시물
+
+### 주간 인기 TOP 10
+
+[1![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+이장근 NAVER 데이터분석
+
+회사 테크 블로그 모음 👨🏻‍💻
+
+](/comments/103945)[2![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+한정수 Software Engineer
+
+498개의 테스트 코드 (번역)
+
+](/comments/103928)[3![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+이양일 NaverCloud 백엔드 개발자
+
+🌐 개발자가 알고 있으면 좋은 사이트
+
+](/comments/103947)[4![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+하조은 Software Engineer
+
+성장의 이유
+
+](/comments/103875)[5![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+김의중 위대한상상 개발자
+
+React 19 베타 출시: Actions의 도입과 새로운 비동기
+
+](/comments/103907)
+
+[6![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+송요창 배민 프론트엔드 프로그래머
+
+신입 개발자의 한 달
+
+](/comments/103929)[7![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+노수진 뉴욕의 스타트업 프로그래머
+
+코딩하다가 막혔을때 극복하는 5가지 방법
+
+](/comments/103985)[8![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+이명진 한국레드햇 솔루션 아키텍트
+
+비쥬얼 스튜디오 코드에서 Llama 3 실행하기
+
+](/comments/103969)[9![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+레드버스백맨 리서처 앤 라이터
+
+⟪성숙한 사람이 되기 위한 10가지 노력⟫
+
+](/comments/103955)[10![](data:image/svg+xml,%3csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20version=%271.1%27%20width=%2780%27%20height=%2780%27/%3e)![](/_next/image?url=%2F_next%2Fstatic%2Fimages%2Fimg_profile-
+dummy-f39ccb87481ab4a70525a9d2d461307d.png&w=256&q=75)
+
+K리그 프로그래머 커피한잔 개발자
+
+집에서 서버를 운영하는 게 가능한가요?
+
+](/comments/103919)
+
+### 추천 프로필
+

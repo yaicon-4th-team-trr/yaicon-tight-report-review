@@ -1,0 +1,113 @@
+[ 파이토치 한국 사용자 모임 ](/)
+
+#  [Salesforce, InstructBLIP 모델의 논문 / 코드 / 가중치 공개](/t/salesforce-
+instructblip/1571)
+
+[ 읽을거리&정보공유 ](/c/news/14)
+
+[lavis](https://discuss.pytorch.kr/tag/lavis),
+[blip2](https://discuss.pytorch.kr/tag/blip2),
+[minigpt-4](https://discuss.pytorch.kr/tag/minigpt-4),
+[instructblip](https://discuss.pytorch.kr/tag/instructblip),
+[salesforce](https://discuss.pytorch.kr/tag/salesforce),
+[gpt-4](https://discuss.pytorch.kr/tag/gpt-4),
+[multimodal](https://discuss.pytorch.kr/tag/multimodal), [vision-
+language](https://discuss.pytorch.kr/tag/vision-language)
+
+[9bow](https://discuss.pytorch.kr/u/9bow) (박정환)  5월 17, 2023, 9:59오전  1
+
+Salesforce에서 BLIP-2 모델에 이어 InstructBLIP 모델의 논문과 구현, 그리고 학습된 가중치를 공개했습니다.
+
+##  InstructBLIP: Towards General-purpose Vision-Language Models with
+Instruction Tuning
+
+[![image](https://discuss.pytorch.kr/uploads/default/original/2X/7/720b1a5fdeccd3fb8e52ace10a474304e32beee9.jpeg)](https://github.com/salesforce/LAVIS/tree/main/projects/instructblip)
+
+아래와 같이 Vicuna, T5를 사용한 2 종류의 모델이 있으며,
+
+    
+    
+    # ==================================================
+    # Architectures                  Types
+    # ==================================================
+    # blip2_vicuna_instruct          vicuna7b, vicuna13b
+    # blip2_t5_instruct              flant5xl, flant5xxl
+    
+
+~~[Salesforce에서 제공하는 LAVIS 패키지](https://github.com/salesforce/LAVIS)(`pip
+install salesforce-lavis`)를 설치하여 바로 사용해 볼 수 있습니다.~~  
+아직 PyPI의 패키지에는 InstructBLIP 모델들이 반영되어 있지 않아서, GitHub에서 직접 설치하셔야 합니다.
+
+    
+    
+    git clone https://github.com/salesforce/LAVIS.git
+    cd LAVIS
+    pip install -e .
+    
+    
+    
+    from lavis.models import load_model_and_preprocess
+    # loads InstructBLIP model
+    model, vis_processors, _ = load_model_and_preprocess(name="blip2_vicuna_instruct", model_type="vicuna7b", is_eval=True, device=device)
+    # prepare the image
+    image = vis_processors["eval"](raw_image).unsqueeze(0).to(device)
+    
+
+  
+코드와 사용법이 궁금하신 분들께서는 GitHub 저장소에서,
+
+![](https://github.githubassets.com/favicons/favicon.svg)
+[github.com](https://github.com/salesforce/LAVIS/tree/main/projects/instructblip)
+
+### [LAVIS/projects/instructblip at main ·
+salesforce/LAVIS](https://github.com/salesforce/LAVIS/tree/main/projects/instructblip)
+
+[main/projects/instructblip](https://github.com/salesforce/LAVIS/tree/main/projects/instructblip)
+
+LAVIS - A One-stop Library for Language-Vision Intelligence
+
+  
+논문이 궁금하신 분들께서는 arXiv에서 바로 확인하실 수 있습니다.  
+~~(저는 오늘도 읽기 큐에 넣기만 하고
+있습니다;;;![:sweat_smile:](https://discuss.pytorch.kr/images/emoji/apple/sweat_smile.png?v=12)
+)~~
+
+![](https://discuss.pytorch.kr/uploads/default/original/2X/c/c683569a48ce1952ba841c851ae3b1f282d4b00f.png)
+[arXiv.org](https://arxiv.org/abs/2305.06500)
+
+![](https://discuss.pytorch.kr/uploads/default/original/2X/8/86a2c8ac52804c90ede238d99cb944037c6f82f6.png)
+
+### [InstructBLIP: Towards General-purpose Vision-Language Models with
+Instruction...](https://arxiv.org/abs/2305.06500)
+
+General-purpose language models that can solve various language-domain tasks
+have emerged driven by the pre-training and instruction-tuning pipeline.
+However, building general-purpose vision-language models is challenging due to
+the increased task...
+
+  
+문서의 마지막에 제시된 이미지의 이상한 부분을 설명하라는 지문에 대한 `InstructBLIP`과 `GPT-4`, `miniGPT-4` 등의
+답변을 비교해 두었는데 인상적이네요.
+![:monkey:](https://discuss.pytorch.kr/images/emoji/apple/monkey.png?v=12)
+
+![image](https://discuss.pytorch.kr/uploads/default/original/2X/e/ea9a956b0e6f6adb323ec01f0234cdac379b4d68.png)
+
+[[무료/온라인/영어] ChatGPT와 CLIP을 사용한 Semantic Visual Search
+만들기](https://discuss.pytorch.kr/t/chatgpt-clip-semantic-visual-search/1731)
+
+[9bow](https://discuss.pytorch.kr/u/9bow) (박정환)  5월 17, 2023, 10:04오전  2
+
+논문에 요런 사례도 첨부되어 있네요
+![:smiley:](https://discuss.pytorch.kr/images/emoji/apple/smiley.png?v=12)
+
+![image](https://discuss.pytorch.kr/uploads/default/original/2X/5/5f4b2578db249d9572ae390976096877be804d16.png)
+
+  * [홈 ](/)
+  * [카테고리 ](/categories)
+  * [FAQ/가이드라인 ](/guidelines)
+  * [이용약관 ](/tos)
+  * [개인정보 취급방침 ](/privacy)
+
+[Discourse](https://www.discourse.org)를 사용합니다. JavaScript가 활성화된 상태에서 가장 잘
+보입니다.
+

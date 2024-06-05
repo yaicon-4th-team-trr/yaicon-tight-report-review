@@ -1,0 +1,415 @@
+#  [ IBOK ](https://bo-10000.tistory.com/ "IBOK")
+
+  * [홈](/)
+
+🌌 Deep Learning/논문 리뷰 [KOR]
+
+## 카카오브레인 Multimodal LLM Honeybee 논문 리뷰
+
+복만 2024\. 3. 2. 16:09
+
+카카오브레인에서 작년 말 Multimodal LLM인 Honeybee를 발표했다. 아쉽게도 한국어 모델은 아니고 영어 모델이고, 5개의
+벤치마크에서 SoTA를 달성했다고 해서 뉴스가 엄청 많이 나왔다.
+
+
+
+논문: <https://arxiv.org/pdf/2312.06742.pdf>
+
+깃헙: <https://github.com/kakaobrain/honeybee>
+
+[  
+
+GitHub - kakaobrain/honeybee: The official implementation of project
+"Honeybee"
+
+The official implementation of project "Honeybee". Contribute to
+kakaobrain/honeybee development by creating an account on GitHub.
+
+github.com
+
+](https://github.com/kakaobrain/honeybee)
+
+
+
+
+
+
+
+
+
+## **1\. 배경**
+
+
+
+**MLLM (Multimodal LLM)** 은 _**vision encoder, LLM, projector**_ 세가지로 구성되어 있다.
+
+
+
+![](https://blog.kakaocdn.net/dn/2LHDY/btsFoEXC9jw/KGnS1YJYP9zSFjO7MqM7D1/img.png)
+
+
+
+**vision encoder** 과 **LLM** 은 각각 따로따로 사전학습된 것을 사용한다. 따라서 두 모델을 연결해주기 위해
+**projector** 가 필요하다.  **projector은 vision encoder에서 나온 visual feature을 LLM의
+feature space로 매핑** 해주는 역할을 한다. 일반적으로 **vision encoder과 LLM은 고정해두고 projector을
+학습** 하는 방식으로 학습이 진행된다.
+
+
+
+
+
+따라서 이 projector의 역할이 매우 중요한데, **크게 두 가지 타입으로 나눌 수 있다.**
+
+
+
+![](https://blog.kakaocdn.net/dn/bsC2Wt/btsFnX4bBfH/qwb0kaNXJkxbezxzCkzTx0/img.png)
+
+
+
+첫번째는 LLaVA 등에서 사용한 _**linear projector**_ 이다. 말그대로 linear layer을 이용해 image
+feature을 변환하는 방식인데, 이 방법은 **feature을 일대일 매핑해야 하기 때문에 계산량이 많다** 는 단점이 있다.
+
+
+
+다른 하나는 _**Abstractor**_ 라고 불리는 기법으로, InstructBLIP, BLIP-2, miniGPT-4 등에서 사용한
+방법이다. 이들은 정해진 수의 visual token을 추출해 사용하는 방식으로, **visual token의 수를 적절하게 조절할 수 있어
+flexibility와 efficiency가 높으나 information loss가 있을 수 있다.** Abstractor 방식은
+resampler, Q-former 등이 있다.
+
+
+
+
+
+이러한 efficiency와 flexibility 때문에 **최근 abstractor 방식이 많이 사용되고 있다.** 그러나
+abstractor은 **locality preservation이 약하다** 는 단점이 있다.
+
+
+
+![](https://blog.kakaocdn.net/dn/cPex1B/btsFoaWz72R/NVLm1YtB7iQAmc8vBnLNAk/img.png)
+
+
+
+위 그림을 보면 큰 feature인 man만 잡아내고 pizza, glass 같은 애들은 못 잡아 내고 있는걸 볼 수 있다. 따라서
+spatial understanding 능력이 떨어진다.
+
+
+
+본 논문에서는 이러한 단점을 극복하기 위해 _**local context를 보존할 수 있는 abstractor 방식**_ 을 새롭게
+제안하고, 이를 적용한 MLLM인 _**Honeybee**_ 를 발표했다.
+
+
+
+
+
+
+
+## **2. Honeybee**
+
+
+
+![](https://blog.kakaocdn.net/dn/bHHahh/btsFsaapgzl/M2JR8DM52SpjwzxaQqKKVK/img.png)
+
+
+
+Honeybee의 전체 구조는 위와 같다. **vision encoder** 에서 visual feature을 추출 후
+**projector** 을 거쳐 visual token으로 변환하고, text token과 함께 **LLM** 의 input으로 넣는다.
+
+
+
+여기까지는 여타 MLLM들과 동일한 구조이고, 핵심 구조는 새롭게 제안한 projector인 _**C-abstractor**_ 과
+_**D-abstractor**_ 이다.
+
+
+
+![](https://blog.kakaocdn.net/dn/bMUtIq/btsFodZ9BI0/FCgCK1ItgJOt7BQYu50GK1/img.png)
+
+
+
+_**C-Abstractor**_ 은 local context를 잘 포착하는 convolution을 이용다. ResNet을 여러개 쌓아
+visual token을 추출한다.
+
+**_D-Abstractor_** 은 [DETR](https://arxiv.org/pdf/2005.12872.pdf)에서 제안한
+deformable attention을 이용하여 visual token을 추출한다.
+
+
+
+
+
+
+
+## **3\. 학습방법**
+
+
+
+학습은 두단계로 진행된다. 첫번째로 vision encoder과 LLM은 freeze하고 abstractor만 학습한다. 그 다음으로
+freeze를 풀고 모든 parameter을 세부 조정하는 단계를 거친다.
+
+
+
+LLM으로는 Vicuna-v1.5 (7B, 13B) 두가지 크기의 모델을 이용했고, vision encoder은 CLIP ViT-L/14
+모델을 이용했다.
+
+
+
+
+
+
+
+## **4\. 실험결과**
+
+
+
+결과 요약 - **5개 bench에서 SoTA를 달성했다.**
+
+
+
+![](https://blog.kakaocdn.net/dn/cwKCS4/btsFmmiWfD3/KbhYskCikJTU8e9SekjgvK/img.png)
+
+
+
+참고로 각 bench의 예시는 다음과 같다.
+
+
+
+![](https://blog.kakaocdn.net/dn/bCNB3J/btsFm7y7kIA/Z43wTCdauhfptj3yR94I31/img.png)
+
+
+
+솔직히 사람이 봐도 좀 어렵다.
+
+
+
+보다 자세한 결과 지표는 다음과 같다.
+
+
+
+![](https://blog.kakaocdn.net/dn/wrSvo/btsFuHS6tv0/AzYweMkg2mjAKsPnjyOczK/img.png)
+
+
+
+Qwen이나 LLaVA 등은 더 큰 vision encoder / image resolution / 더 많은 visual token을
+이용했지만 Honeybee의 성능이 더 높았다고 한다.
+
+
+
+![](https://blog.kakaocdn.net/dn/beW08S/btsFuNMzzrQ/binNxMunkybjmob5oJGtl1/img.png)
+
+
+
+Honeybee도 이렇게 image resolution과 visual token 수를 높이면 성능이 더 상승한다고 한다.
+
+
+
+
+
+다음은 실험단계에서 세운 각 가설에 대한 검증이다.
+
+
+
+![](https://blog.kakaocdn.net/dn/btmjs6/btsFn9i79Ck/4sL3JZmXCk62THWgXrCxS1/img.png)
+
+
+
+C/D-abstractor이 local context preservation에 좋다는 것을 보이기 위해 spatial
+understanding capability를 볼 수 있는 task에 대한 성능을 측정했다고 한다.
+
+
+
+![](https://blog.kakaocdn.net/dn/bVFBIL/btsFsaha1TU/65IB1parTaujQC7s2P1bT0/img.png)
+
+
+
+위는 performance와 efficiency에 대한 비교이다. linear은 앞서 말했듯이 일대일 대응이라 flexibility가 아예
+없다. resampler과 C-abstractor은 flexible하게 디자인할 수 있으며, visual token 수가 늘어날수록 성능이
+증가하는 양상을 보이나 C-abstractor의 성능이 훨씬 좋다.
+
+
+
+
+
+마지막으로 Honeybee가 생성한 답변의 예시들이다.
+
+
+
+![](https://blog.kakaocdn.net/dn/bzQkIe/btsFoaWAfZe/FhzUQNAnB8V5QjIHVdpokk/img.png)
+![](https://blog.kakaocdn.net/dn/vpM1G/btsFqNzNeoe/RjiwgyCKodTVzGjsI8FwTK/img.png)
+
+
+
+참 잘하네..
+
+반응형
+
+공유하기
+
+게시글 관리
+
+_구독하기_ **IBOK**
+
+#### '[🌌 Deep Learning](/category/%F0%9F%8C%8C%20Deep%20Learning) > [논문 리뷰
+[KOR]](/category/%F0%9F%8C%8C%20Deep%20Learning/%EB%85%BC%EB%AC%B8%20%EB%A6%AC%EB%B7%B0%20%5BKOR%5D)'
+카테고리의 다른 글
+
+[[딥러닝 논문리뷰] MeZO: Fine-Tuning Language Models with Just Forward Passes
+(NeurIPS 2023)](/206)  (2) | 2024.01.28  
+---|---  
+[[딥러닝 논문리뷰] AIM: Scalable Pre-training of Large Autoregressive Image Models
+(Apple, 2024)](/205)  (0) | 2024.01.21  
+[Apple의 Multimodal LLM Ferret 논문 리뷰](/203)  (2) | 2024.01.07  
+[[딥러닝 논문리뷰] AdamP: Slowing Down the Slowdown for Momentum Optimizers on Scale-
+invariant Weights (Naver AI Lab, ICLR 2021)](/195)  (0) | 2023.07.23  
+[[딥러닝 논문리뷰] Audio-Visual Speech Enhancement Using Multimodal Deep
+Convolutional Neural Networks](/168)  (1) | 2022.09.21  
+  
+### Tag
+
+[mllm](/tag/mllm), [Multimodal](/tag/Multimodal)
+
+### '🌌 Deep Learning/논문 리뷰 [KOR]'의 다른글
+
+  * [이전글 **[딥러닝 논문리뷰] MeZO: Fine-Tuning Language Models with Just Forward Passes (NeurIPS 2023)**](/206)
+  * 현재글 **카카오브레인 Multimodal LLM Honeybee 논문 리뷰**
+  * 
+
+### 관련글
+
+  * [ **[딥러닝 논문리뷰] MeZO: Fine-Tuning Language Models with Just Forward Passes (NeurIPS 2023)** 2024.01.28 ](/206?category=948904)
+  * [ **[딥러닝 논문리뷰] AIM: Scalable Pre-training of Large Autoregressive Image Models (Apple, 2024)** 2024.01.21 ](/205?category=948904)
+  * [ **Apple의 Multimodal LLM Ferret 논문 리뷰** 2024.01.07 ](/203?category=948904)
+  * [ **[딥러닝 논문리뷰] AdamP: Slowing Down the Slowdown for Momentum Optimizers on Scale-invariant Weights (Naver AI Lab, ICLR 2021)** 2023.07.23 ](/195?category=948904)
+
+댓글 1
+
+  * 
+
+비밀글 등록
+
+![프로필사진](https://tistory1.daumcdn.net/tistory/3487102/attach/fb04976601014f93b22d0aff6d652500)
+
+🐬
+
+  * [ 분류 전체보기 (174) ](/category)
+    * [ 🌌 Deep Learning (50) ](/category/%F0%9F%8C%8C%20Deep%20Learning)
+      * [ 논문 리뷰 [KOR] (24) ](/category/%F0%9F%8C%8C%20Deep%20Learning/%EB%85%BC%EB%AC%B8%20%EB%A6%AC%EB%B7%B0%20%5BKOR%5D)
+      * [ Paper Review [ENG] (0) ](/category/%F0%9F%8C%8C%20Deep%20Learning/Paper%20Review%20%5BENG%5D)
+      * [ DL & ML 조각 지식 (4) ](/category/%F0%9F%8C%8C%20Deep%20Learning/DL%20%26%20ML%20%EC%A1%B0%EA%B0%81%20%EC%A7%80%EC%8B%9D)
+      * [ Overview (6) ](/category/%F0%9F%8C%8C%20Deep%20Learning/Overview)
+      * [ Dataset (3) ](/category/%F0%9F%8C%8C%20Deep%20Learning/Dataset)
+      * [ 평가 (3) ](/category/%F0%9F%8C%8C%20Deep%20Learning/%ED%8F%89%EA%B0%80)
+      * [ Implementation (6) ](/category/%F0%9F%8C%8C%20Deep%20Learning/Implementation)
+      * [ Etc. (4) ](/category/%F0%9F%8C%8C%20Deep%20Learning/Etc.)
+    * [ 🐍 Python & library (49) ](/category/%F0%9F%90%8D%20Python%20%26%20library)
+      * [ Python (5) ](/category/%F0%9F%90%8D%20Python%20%26%20library/Python)
+      * [ PyTorch (18) ](/category/%F0%9F%90%8D%20Python%20%26%20library/PyTorch)
+      * [ PyTorch Lightning (2) ](/category/%F0%9F%90%8D%20Python%20%26%20library/PyTorch%20Lightning)
+      * [ Tensorflow (1) ](/category/%F0%9F%90%8D%20Python%20%26%20library/Tensorflow)
+      * [ Flax (0) ](/category/%F0%9F%90%8D%20Python%20%26%20library/Flax)
+      * [ HuggingFace (5) ](/category/%F0%9F%90%8D%20Python%20%26%20library/HuggingFace)
+      * [ Scikit-Learn (4) ](/category/%F0%9F%90%8D%20Python%20%26%20library/Scikit-Learn)
+      * [ numpy (2) ](/category/%F0%9F%90%8D%20Python%20%26%20library/numpy)
+      * [ librosa (4) ](/category/%F0%9F%90%8D%20Python%20%26%20library/librosa)
+      * [ SimpleITK (4) ](/category/%F0%9F%90%8D%20Python%20%26%20library/SimpleITK)
+      * [ Etc. (4) ](/category/%F0%9F%90%8D%20Python%20%26%20library/Etc.)
+    * [ 👻 OS & Tools (33) ](/category/%F0%9F%91%BB%20OS%20%26%20Tools)
+      * [ Ubuntu (14) ](/category/%F0%9F%91%BB%20OS%20%26%20Tools/Ubuntu)
+      * [ Mac (3) ](/category/%F0%9F%91%BB%20OS%20%26%20Tools/Mac)
+      * [ Windows (1) ](/category/%F0%9F%91%BB%20OS%20%26%20Tools/Windows)
+      * [ VSCode (3) ](/category/%F0%9F%91%BB%20OS%20%26%20Tools/VSCode)
+      * [ Git (3) ](/category/%F0%9F%91%BB%20OS%20%26%20Tools/Git)
+      * [ LaTeX (8) ](/category/%F0%9F%91%BB%20OS%20%26%20Tools/LaTeX)
+      * [ Tools (1) ](/category/%F0%9F%91%BB%20OS%20%26%20Tools/Tools)
+    * [ 👽 Language & Frameworks (6) ](/category/%F0%9F%91%BD%20Language%20%26%20Frameworks)
+      * [ Matlab (1) ](/category/%F0%9F%91%BD%20Language%20%26%20Frameworks/Matlab)
+      * [ Spark (5) ](/category/%F0%9F%91%BD%20Language%20%26%20Frameworks/Spark)
+    * [ 🔬 Medical Image (13) ](/category/%F0%9F%94%AC%20Medical%20Image)
+      * [ MRI (3) ](/category/%F0%9F%94%AC%20Medical%20Image/MRI)
+      * [ Processing (5) ](/category/%F0%9F%94%AC%20Medical%20Image/Processing)
+      * [ 논문 리뷰 (5) ](/category/%F0%9F%94%AC%20Medical%20Image/%EB%85%BC%EB%AC%B8%20%EB%A6%AC%EB%B7%B0)
+    * [ 💩 에러 해결 (7) ](/category/%F0%9F%92%A9%20%EC%97%90%EB%9F%AC%20%ED%95%B4%EA%B2%B0)
+    * [ 🔑 CS (11) ](/category/%F0%9F%94%91%20CS)
+      * [ 코딩테스트 (10) ](/category/%F0%9F%94%91%20CS/%EC%BD%94%EB%94%A9%ED%85%8C%EC%8A%A4%ED%8A%B8)
+      * [ 알고리즘 (1) ](/category/%F0%9F%94%91%20CS/%EC%95%8C%EA%B3%A0%EB%A6%AC%EC%A6%98)
+    * [ 🥨 이것저것 (5) ](/category/%F0%9F%A5%A8%20%EC%9D%B4%EA%B2%83%EC%A0%80%EA%B2%83)
+    * [ 📖 독후감 (0) ](/category/%F0%9F%93%96%20%EB%8F%85%ED%9B%84%EA%B0%90)
+
+반응형
+
+### 최근글과 인기글
+
+  * 최근글
+  * 인기글
+
+  * [
+
+**카카오브레인 Multimodal LLM Honeybee 논문 리뷰** 2024.03.02 16:09 ](/207)
+
+  * [
+
+**[딥러닝 논문리뷰] MeZO: Fine-Tuning Language Models with Just Forward Passes ⋯**
+2024.01.28 22:42 ](/206)
+
+  * [
+
+**[딥러닝 논문리뷰] AIM: Scalable Pre-training of Large Autoregressive Image Mo⋯**
+2024.01.21 23:03 ](/205)
+
+  * [
+
+**내가 보려고 정리하는 LaTex 자주 쓰는 수식 정리** 2021.11.16 15:29 ](/97)
+
+  * [
+
+**LaTex 표 관련 팁 (표 자동 생성기, 폰트 크기 조정, 셀 너비, 표 내부 여백, footnote 달기)** 2022.04.26
+22:14 ](/128)
+
+  * [ **[HuggingFace] Trainer 사용법** 2022.07.23 15:27 ](/154)
+
+### 최근댓글
+
+  * [ **논문을 보면 ResNet-D는 ResNet-B에 average pooling을 추가한 형태⋯**
+
+행인
+
+](/133#comment21315301)
+
+  * [ **https://m.blog.naver.com/edennnie/223155243141**
+
+hmm
+
+](/73#comment21295201)
+
+  * [ **nvidia-smi는 GPU드라이버가 지원하는 최신 CUDA버전이고, nvcc --vers⋯**
+
+hmm
+
+](/73#comment21295174)
+
+### 방문자수Total
+
+413,313
+
+  * Today : 729
+  * Yesterday : 867
+
+### Calendar
+
+[«](/archive/202404 "1개월 앞의 달력을 보여줍니다.")   [2024/05](/archive/202405 "현재 달의
+달력을 보여줍니다.")   [»](/archive/202406 "1개월 뒤의 달력을 보여줍니다.") 일 | 월 | 화 | 수 | 목 | 금
+| 토  
+---|---|---|---|---|---|---  
+|  |  | 1 | 2 | 3 | 4  
+5 | 6 | 7 | 8 | 9 | 10 | 11  
+12 | 13 | 14 | 15 | 16 | 17 | 18  
+19 | 20 | 21 | 22 | 23 | 24 | 25  
+26 | 27 | 28 | 29 | 30 | 31 |  
+  
+Copyright © Kakao Corp. All rights reserved.
+
+관련사이트
+
+  * [Github](https://github.com/bo-10000)
+
+## 티스토리툴바
+
+**IBOK** _구독하기_
+
