@@ -1,3 +1,9 @@
+# Contributors
+<center>
+<img src="assets/img/members.png" alt="Description" width="500">
+</center>
+
+
 # Announcement
 - Jun, 5, 2024: 🤗 We have made this repository public. You can reproduce it using our pipeline!
 
