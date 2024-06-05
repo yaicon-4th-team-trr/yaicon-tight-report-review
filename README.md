@@ -1,6 +1,6 @@
 # Contributors
 <center>
-<img src="assets/img/members.png" alt="Description" width="500">
+<img src="assets/img/members.png" alt="Description" width="700">
 </center>
 
 
